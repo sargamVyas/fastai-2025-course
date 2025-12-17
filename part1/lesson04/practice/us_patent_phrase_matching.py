@@ -1,106 +1,105 @@
 import pandas as pd
+import numpy as np
 from pathlib import Path
 import os
-from datasets import Dataset
-from transformers import AutoTokenizer
+from datasets import Dataset, DatasetDict
+from transformers import (
+    AutoTokenizer, 
+    AutoModelForSequenceClassification, 
+    TrainingArguments, 
+    Trainer
+)
 
 # --- CONFIGURATION ---
-# Define the name of the Hugging Face model to be used for tokenization and training.
-# Deberta-v3-small is a powerful and efficient choice for sequence classification.
 MODEL_NAME = 'microsoft/deberta-v3-small'
-
-# Define the relative path to the data directory.
-# This assumes your data (e.g., train.csv) is located in a 'data' folder
-# relative to where this script is executed.
-# NOTE: Replace this with your actual local path if running outside a standard structure.
 DATA_DIR = Path('data')
 TRAIN_FILE = 'train.csv'
+OUTPUT_DIR = 'outputs'
+
+# --- METRICS ---
+def compute_metrics(eval_pred):
+    """Calculates Pearson correlation between predictions and labels."""
+    predictions, labels = eval_pred
+    # Deberta returns a 2D array for regression; flatten to 1D
+    predictions = predictions.flatten()
+    return {"pearson": np.corrcoef(predictions, labels)[0, 1]}
 
 # --- DATA LOADING AND PREPROCESSING ---
 
-def load_data(data_dir: Path, filename: str) -> pd.DataFrame:
-    """Loads the training data from a specified CSV file."""
-    # Use the / operator from pathlib.Path for cross-platform path joining
+def load_and_prepare_data(data_dir: Path, filename: str) -> pd.DataFrame:
     file_path = data_dir / filename
-    print(f"Attempting to load data from: {file_path}")
     try:
         df = pd.read_csv(file_path)
-        print(f"Data loaded successfully. Shape: {df.shape}")
-        return df
+        # Combine context, target, and anchor into a single string
+        # We use lowercase to ensure consistency
+        df['input'] = (
+            'TEXT1: ' + df['context'].str.lower() + 
+            '; TEXT2: ' + df['target'].str.lower() + 
+            '; ANC1: ' + df['anchor'].str.lower()
+        )
+        # Rename 'score' to 'labels' as required by the Trainer API
+        return df.rename(columns={'score': 'labels'})
     except FileNotFoundError:
-        print(f"ERROR: File not found at {file_path}. Please check your path.")
+        print(f"ERROR: {file_path} not found.")
         return pd.DataFrame()
 
-def prepare_input_text(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Creates a combined 'input' text column following a format often used
-    for competitive NLP tasks (e.g., Siamese network style input).
-    
-    The format is: 'Text1: [context]; Text2: [target]; Anc1: [anchor]'
-    """
-    if df.empty:
-        return df
-        
-    df['input'] = (
-        'Text1: ' + df['context'] + 
-        '; Text2: ' + df['target'] + 
-        '; Anc1: ' + df['anchor']
-    )
-    return df
-
-def tokenize_dataset(df: pd.DataFrame, model_nm: str):
-    """
-    Initializes a tokenizer and applies it to the 'input' column of the dataset.
-    
-    This step performs both tokenization (splitting text) and numericalization 
-    (converting tokens to IDs).
-    """
-    if df.empty:
-        print("Dataframe is empty, skipping tokenization.")
-        return None
-
-    # 1. Convert pandas DataFrame to Hugging Face Dataset format
-    ds = Dataset.from_pandas(df)
-    
-    # 2. Load the pre-trained tokenizer
-    print(f"Loading tokenizer: {model_nm}")
-    tokz = AutoTokenizer.from_pretrained(model_nm)
-
-    # 3. Define the tokenization function
-    def tok_func(x): 
-        # Tokenizer is applied to the list of texts in the 'input' column for the batch
-        return tokz(x['input'])
-
-    # 4. Apply the function to the entire dataset, processing in batches for efficiency
-    print("Tokenizing dataset...")
-    tok_ds = ds.map(tok_func, batched=True)
-    
-    return tok_ds
-
-# --- MAIN EXECUTION BLOCK ---
+# --- MAIN EXECUTION ---
 
 if __name__ == "__main__":
-    
-    # Check if the data directory exists
-    if not DATA_DIR.exists():
-        print(f"Creating data directory: {DATA_DIR}")
-        os.makedirs(DATA_DIR)
-        print("Please place your 'train.csv' file inside the 'data' directory.")
-    
-    # 1. Load data
-    df = load_data(DATA_DIR, TRAIN_FILE)
+    # 1. Load and Prepare
+    df = load_and_prepare_data(DATA_DIR, TRAIN_FILE)
     
     if not df.empty:
-        # 2. Prepare the combined input text
-        df = prepare_input_text(df)
-        print("\nExample of prepared input text:")
-        print(df['input'].head())
-
-        # 3. Tokenize and Numericalize the data
-        tokenized_data = tokenize_dataset(df, MODEL_NAME)
+        # 2. Tokenization
+        tokz = AutoTokenizer.from_pretrained(MODEL_NAME)
         
-        if tokenized_data:
-            print("\nTokenization Complete. Final Dataset Structure:")
-            print(tokenized_data)
-            # You can save the tokenized_data here for further training
-            # e.g., tokenized_data.save_to_disk("tokenized_train_data")
+        def tok_func(x): 
+            return tokz(x['input'], truncation=True, max_length=512)
+
+        # 3. Create Dataset and Split
+        # Convert to HF Dataset and split into 75% train / 25% validation
+        ds = Dataset.from_pandas(df).map(tok_func, batched=True)
+        dds = ds.train_test_split(0.25, seed=42)
+        
+        # 4. Training Arguments
+        # We use a cosine learning rate scheduler and FP16 for speed
+        args = TrainingArguments(
+            OUTPUT_DIR,
+            learning_rate=8e-5,
+            warmup_ratio=0.1,
+            lr_scheduler_type='cosine',
+            fp16=True,
+            evaluation_strategy="epoch",
+            save_strategy="epoch",
+            per_device_train_batch_size=128,
+            per_device_eval_batch_size=256,
+            num_train_epochs=4,
+            weight_decay=0.01,
+            load_best_model_at_end=True,
+            metric_for_best_model="pearson",
+            report_to='none'
+        )
+
+        # 5. Initialize Model
+        # num_labels=1 tells the model this is a regression task
+        model = AutoModelForSequenceClassification.from_pretrained(
+            MODEL_NAME, 
+            num_labels=1
+        )
+
+        # 6. Training
+        trainer = Trainer(
+            model,
+            args,
+            train_dataset=dds['train'],
+            eval_dataset=dds['test'],
+            tokenizer=tokz,
+            compute_metrics=compute_metrics
+        )
+
+        print("Starting training...")
+        trainer.train()
+        
+        # 7. Save the final model
+        trainer.save_model("./final_patent_model")
+        print("Model saved to ./final_patent_model")
