@@ -16,7 +16,15 @@ Setting up linear model:
 5. Calculate Loss: torch.abs(pred-t_dep).mean()
 
 Gradient descent steps:
-1. Tell pytirch what do you need derivates for -> coeffs.requires_grad_() -> gradient for coeff
+1. Tell pytorch what do you need derivates for -> coeffs.requires_grad_() -> gradient/derivative for coeff and its in-place
+2. Perform the Backward Pass After calculating your loss, you need to trigger the math.
+    2.1 loss.backward() -> This calculates the gradient (the slope) for every tensor where requires_grad=True.
+    2.2 The results are stored in coeffs.grad.
+3. Update the Coefficients (The Step) Once you have the gradients, you move the coefficients in the opposite direction of the slope to reduce the loss.
+    3.1 Use a Learning Rate (lr) to control how big of a step you take.
+    3.2 coeffs.data.sub_(coeffs.grad * lr) -> This is the manual way to update weights without PyTorch tracking the update itself as part of the gradient.
+4. Zero the Gradients PyTorch adds new gradients to old ones (accumulation), so you must empty the "bucket" before the next loop.
+    4.1 coeffs.grad.zero_() -> Resets the gradients to zero so they don't add up across iterations.
 
 Notes:
 Try not to use manual_seed as it helps to understand how your data is behaving
