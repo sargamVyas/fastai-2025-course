@@ -31,6 +31,12 @@ Adding Sigmoid:
 * torch.sigmoid((indeps*coeffs).sum(axis=1)) -> using while calculating prediciton
 * If you have binary dependent variable always chuck it through sigmoid
 
+Neural Net from scratch:
+1. everything has to be in matrix form so that matrix mult can be done
+2. deffine rand_var as -> layer_1 = torch.rand(n_coeff, n_hidden); layer_2 = torch.rand(n_hidden, 1) -> in this only one hidden layer
+3. Add relu after every layer to add non-linearity in it
+** For deep learning you just add n-hidden layers
+
 
 Notes:
 * Try not to use manual_seed as it helps to understand how your data is behaving
@@ -42,7 +48,7 @@ Notes:
 Element-wise vas matmul:
     Element-wise (*): Multiplies matching positions ($A_{1,1} \times B_{1,1}$); requires identical shapes or broadcasting.
     Matrix Mult (@): Does the "multiply then sum" (Dot Product) in one step; the columns of the first matrix must match the rows of the second.
-    $$(t\_indep * coeffs).sum(axis=1) \equiv t\_indep @ coeffs$$
+    (t_indep*coeff).sum(axis=1) = val_indep@coeffs
 '''
 
 import os
