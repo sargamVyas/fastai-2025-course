@@ -33,7 +33,7 @@ This structure is designed to keep course-specific work separate from independen
 | **L2** | Production | ✅ Done | Exporting models and introduction to Gradio/deployment. |
 | **L3** | Data Ethics & Image Segmentation | 🚧 In Progress | U-Nets for pixel-level prediction. |
 | **L4** | NLP & Tabular Data** | ✅ Done | Hugging Face Tokenization and Data Prep (See details below).|
-| **L5** | **Linear Model and Neural Net from Scratch** | ✅ Done | Manual gradient descent, broadcasting, and building a 2-layer NN (See details below). |
+| **L5** | **Linear Model and Neural Net from Scratch** | ✅ Done | Linear model, Neural Net, Deep learning model from scratch(See details below). |
 | **L6** | Random Forest | ⬜ Pending | |
 | **L7** | Collaborative Filtering | ⬜ Pending |  |
 | **L8** | Collaborative Filtering | ⬜ Pending |  |
