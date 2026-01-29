@@ -26,10 +26,23 @@ Gradient descent steps:
 4. Zero the Gradients PyTorch adds new gradients to old ones (accumulation), so you must empty the "bucket" before the next loop.
     4.1 coeffs.grad.zero_() -> Resets the gradients to zero so they don't add up across iterations.
 
+Adding Sigmoid:
+* why? To make our prediction range between 0 and 1 which makes it easier to optimize
+* torch.sigmoid((indeps*coeffs).sum(axis=1)) -> using while calculating prediciton
+* If you have binary dependent variable always chuck it through sigmoid
+
+
 Notes:
-Try not to use manual_seed as it helps to understand how your data is behaving
-Normalization technique: divide by max , sub by mean and divide by std dev 
-Underscore in dunciotn is in place operation so requires_grad_() will make the change permanently
+* Try not to use manual_seed as it helps to understand how your data is behaving
+* Normalization technique: divide by max , sub by mean and divide by std dev 
+* Underscore in dunciotn is in place operation so requires_grad_() will make the change permanently
+* torch.no_grad(): When you are updating your coeffs or calculating accuracy, use this context manager. It saves memory because you don't need to calculate gradients for the update part of the code—only for the model part.
+* Why sub_?: We subtract because the gradient points "uphill." To get to the bottom of the valley (minimum loss), we have to go the opposite way!
+
+Element-wise vas matmul:
+    Element-wise (*): Multiplies matching positions ($A_{1,1} \times B_{1,1}$); requires identical shapes or broadcasting.
+    Matrix Mult (@): Does the "multiply then sum" (Dot Product) in one step; the columns of the first matrix must match the rows of the second.
+    $$(t\_indep * coeffs).sum(axis=1) \equiv t\_indep @ coeffs$$
 '''
 
 import os
