@@ -37,6 +37,15 @@ Neural Net from scratch:
 3. Add relu after every layer to add non-linearity in it
 ** For deep learning you just add n-hidden layers
 
+Activation function - when and where to use them
+* ReLU is for Learning: Put it between layers so the model can learn complex, non-linear shapes. It's the "non-linearity" tool.
+* Sigmoid is for Deciding: Put it at the very end if you need your output to be a probability between 0 and 1 (like in the Titanic survival model Jeremy Howard uses).
+*Final Layer Rule:
+    **Regression (predicting a number): Usually no activation at the end.
+    **Binary Classification: Use Sigmoid at the end.
+    **Multi-class Classification: Use Softmax at the end.
+Note: A common mistake is putting a ReLU after the final layer when you want to predict a range. If you do that, your model can never "correct" itself for being too low if the output is already stuck at zero!
+
 
 Notes:
 * Try not to use manual_seed as it helps to understand how your data is behaving
