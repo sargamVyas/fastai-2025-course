@@ -65,7 +65,29 @@ from pathlib import Path
 import numpy as np, pandas as pd
 from torch import tensor
 
-
-
+#---Configurations---
 path = Path('data')
-train_data = 'train.csv'
+TRAIN_FILE = 'train.csv'
+
+#---Data Loading and Preprocessing---
+def load_and_process_data(data_dir:Path, filename:str) -> pd.DataFrame:
+
+#---Intializing weights---
+def init_weights():
+
+#---Calculate Prediction/Forward pass--
+def calc_pred():
+
+#---Calculate loss---
+def calc_loss():
+
+#---Caluclate gradient descent
+def one_epoch():
+
+#---Train the model---
+def train_model():
+
+    
+#Defining main function
+if __name__ == "__main__":
+    df = load_and_process_data(path)
