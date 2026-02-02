@@ -66,28 +66,47 @@ import numpy as np, pandas as pd
 from torch import tensor
 
 #---Configurations---
-path = Path('data')
-TRAIN_FILE = 'train.csv'
+DATA_PATH = Path('data')
+LEARNING_RATE = 0.01
+EPOCHS = 1
 
 #---Data Loading and Preprocessing---
-def load_and_process_data(data_dir:Path, filename:str) -> pd.DataFrame:
+def preprocess_data(df, mode):
+
+
+
+
 
 #---Intializing weights---
-def init_weights():
+def init_weights(n_in, n_hidden):
 
 #---Calculate Prediction/Forward pass--
-def calc_pred():
+def calc_pred(weight, inputs):
 
 #---Calculate loss---
-def calc_loss():
+def calc_loss(preds, target):
 
 #---Caluclate gradient descent
-def one_epoch():
+def one_epoch(weights, train_x, train_y, lr):
 
 #---Train the model---
 def train_model():
 
-    
+
+def main():
+    train_df = pd.read_csv(DATA_PATH/ 'train.csv')
+    test_df = pd.read_csv(DATA_PATH/ 'test.csv')
+
+    train_modes = train_df.mode().iloc[0]
+
+    train_x, train_y = preprocess_data(train_df, modes=train_modes)
+
+    n_features = train_x.shape[1]
+
+    weights = init_weights(n_features, 0)
+
+
+
 #Defining main function
 if __name__ == "__main__":
-    df = load_and_process_data(path)
+    main()
