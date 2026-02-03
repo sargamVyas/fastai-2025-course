@@ -119,19 +119,24 @@ def preprocess_data(df, modes):
     
     return x, y
 
-
-
 #---Intializing weights---
-def init_weights(n_in, n_hidden):
+def init_weights(n_in):
+    weights = (torch.rand(n_in) - 0.5) * 0.1
+    return weights.requires_grad_()
+
 
 #---Calculate Prediction/Forward pass--
-def calc_pred(weight, inputs):
+def calc_pred(weights, inputs):
+    return inputs @ weights
 
 #---Calculate loss---
-def calc_loss(preds, target):
+def calc_loss(preds, targets):
+    return torch.abs(preds.squeeze() - targets.squeeze()).mean()
 
 #---Caluclate gradient descent
 def one_epoch(weights, train_x, train_y, lr):
+    
+
 
 #---Train the model---
 def train_model():
@@ -148,6 +153,20 @@ def main():
     n_features = train_x.shape[1]
 
     weights = init_weights(n_features, 0)
+
+    # 6. The Training Loop
+    print("Starting Training...")
+    for epoch in range(EPOCHS):
+        # Call your 'one_epoch' function which handles the forward/backward/update
+        loss = one_epoch(weights, train_x, train_y, LEARNING_RATE)
+        
+        if epoch % 10 == 0:
+            print(f"Epoch {epoch}: Loss {loss:.4f}")
+
+    # 7. Final Evaluation
+    # Use your final weights to see how you did on the test set
+    final_test_loss = calc_loss(calc_pred(weights, test_x), test_y)
+    print(f"Final Test Loss: {final_test_loss:.4f}")
 
 
 
