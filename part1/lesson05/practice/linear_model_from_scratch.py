@@ -64,6 +64,7 @@ import os
 from pathlib import Path
 import numpy as np, pandas as pd
 from torch import tensor
+import torch
 
 #---Configurations---
 DATA_PATH = Path('data')
@@ -107,14 +108,16 @@ def preprocess_data(df, modes):
     #4. Normalizing values
     df = normalize_col(df)
 
+    #5. Converting dataframe to tensors
+    if 'Survived' in df.columns:
+        y = torch.tensor(df['Survived'].values).float()
+        x = torch.tensor(df.drop('Survived', axis=1).values).float()
+    else:
+        # If it's the test set without labels
+        y = None
+        x = torch.tensor(df.values).float()
     
-
-    
-
-
-    
-
-
+    return x, y
 
 
 
