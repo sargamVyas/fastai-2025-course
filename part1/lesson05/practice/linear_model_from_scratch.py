@@ -71,7 +71,7 @@ LEARNING_RATE = 0.01
 EPOCHS = 1
 
 #---Log transformation logic to make col normally distributed---
-def apply_log_tranform(df, threshold=0.75):
+def apply_log_transform(df, threshold=0.75):
     numeric_cols = df.select_dtypes(include=[np.number]).columns
 
     for col in numeric_cols:
@@ -82,6 +82,16 @@ def apply_log_tranform(df, threshold=0.75):
 
     return df
 
+def normalize_col(df):
+    numeric_col = df.select_dtypes(include=[np.number]).columns
+
+    for col in numeric_col:
+        col_max = df[col].max()
+        if col_max != 0:
+            df[col] = df[col] / col_max
+    return df
+
+
 #---Data Loading and Preprocessing---
 def preprocess_data(df, modes):
 
@@ -90,6 +100,18 @@ def preprocess_data(df, modes):
 
     #2.Checking for lefttail or righttail and using log to restructure it
     df = apply_log_transform(df)
+
+    #3. Creating dummies for categorical value
+    df = pd.get_dummies(df, drop_first=True, dtype=float)
+
+    #4. Normalizing values
+    df = normalize_col(df)
+
+    
+
+    
+
+
     
 
 
