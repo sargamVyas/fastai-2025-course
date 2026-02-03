@@ -70,8 +70,27 @@ DATA_PATH = Path('data')
 LEARNING_RATE = 0.01
 EPOCHS = 1
 
+#---Log transformation logic to make col normally distributed---
+def apply_log_tranform(df, threshold=0.75):
+    numeric_cols = df.select_dtypes(include=[np.number]).columns
+
+    for col in numeric_cols:
+        current_skew = df[col].skew()
+
+        if current_skew > threshold:
+            df[col] = np.log1p(df[col])
+
+    return df
+
 #---Data Loading and Preprocessing---
-def preprocess_data(df, mode):
+def preprocess_data(df, modes):
+
+    #1. Cleaning the df by checking n/a and relacing with mode
+    df.fillna(modes, inplace=True)
+
+    #2.Checking for lefttail or righttail and using log to restructure it
+    df = apply_log_transform(df)
+    
 
 
 
