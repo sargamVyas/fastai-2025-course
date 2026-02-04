@@ -127,7 +127,8 @@ def init_weights(n_in):
 
 #---Calculate Prediction/Forward pass--
 def calc_pred(weights, inputs):
-    return inputs @ weights
+    linear_sum = inputs @ weights
+    return torch.sigmoid(linear_sum)
 
 #---Calculate loss---
 def calc_loss(preds, targets):
@@ -142,7 +143,7 @@ def one_epoch(weights, train_x, train_y, lr):
 
     loss.backward()
 
-    with torch.no_grad():
+    with torch.no_grad_():
         weights.sub_(weights.grad * lr)
 
         weights.grad.zero()
@@ -161,7 +162,7 @@ def main():
 
     n_features = train_x.shape[1]
 
-    weights = init_weights(n_features, 0)
+    weights = init_weights(n_features)
 
     # 6. The Training Loop
     print("Starting Training...")
@@ -174,6 +175,7 @@ def main():
 
     # 7. Final Evaluation
     # Use your final weights to see how you did on the test set
+    test_x, test_y = preprocess_data(test_df, modes=train_modes)
     final_test_loss = calc_loss(calc_pred(weights, test_x), test_y)
     print(f"Final Test Loss: {final_test_loss:.4f}")
 
