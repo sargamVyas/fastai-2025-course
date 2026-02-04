@@ -133,13 +133,22 @@ def calc_pred(weights, inputs):
 def calc_loss(preds, targets):
     return torch.abs(preds.squeeze() - targets.squeeze()).mean()
 
-#---Caluclate gradient descent
+#---Calculate gradient descent
 def one_epoch(weights, train_x, train_y, lr):
     
+    preds = calc_pred(weights, train_x)
 
+    loss = calc_loss(preds, train_y)
 
-#---Train the model---
-def train_model():
+    loss.backward()
+
+    with torch.no_grad():
+        weights.sub_(weights.grad * lr)
+
+        weights.grad.zero()
+
+    return loss.item()
+
 
 
 def main():
@@ -167,8 +176,6 @@ def main():
     # Use your final weights to see how you did on the test set
     final_test_loss = calc_loss(calc_pred(weights, test_x), test_y)
     print(f"Final Test Loss: {final_test_loss:.4f}")
-
-
 
 #Defining main function
 if __name__ == "__main__":
