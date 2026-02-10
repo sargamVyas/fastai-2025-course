@@ -123,7 +123,7 @@ def preprocess_data(df, modes):
 def init_weights(layers):
     weights = []
     for i in range(layers):
-        w = (torch.rand(layers[i]*layers[i+1]) - 0.5) * 0.1
+        w = (torch.rand(layers[i],layers[i+1]) - 0.5) * 0.1
         weights.append(w.requires_grad_())
     return weights
 
@@ -132,8 +132,8 @@ def init_weights(layers):
 def calc_pred(weights, inputs):
     res = inputs
 
-    for i in weights[:-1]:
-        res = res @ weights[i]
+    for w in weights[:-1]:
+        res = res @ w
         res = res.clamp_min(0.)
     
     res = res@weights[-1]
@@ -154,9 +154,9 @@ def one_epoch(weights, train_x, train_y, lr):
     loss.backward()
 
     with torch.no_grad_():
-        weights.sub_(weights.grad * lr)
-
-        weights.grad.zero()
+        for w in weights:
+            w.sub_(w.grad * lr)
+            w.grad.zero()
 
     return loss.item()
 
@@ -172,7 +172,9 @@ def main():
 
     n_features = train_x.shape[1]
 
-    weights = init_weights(n_features)
+    architecture = [n_features, 20, 10, 1]
+
+    weights = init_weights(architecture)
 
     # 6. The Training Loop
     print("Starting Training...")
