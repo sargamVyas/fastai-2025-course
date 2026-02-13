@@ -44,4 +44,14 @@ def check_tensor_mem(height, width, batch=1, dtype=torch.float32):
     total_bytes = height * width * 3 * batch * bytes_per_element
     print(f"Image Tensor ({height}x{width}) Memory: {total_bytes / 1e6:.2f} MB")
 
+
+#Function that reports gpu memory
+import gc
+
+def report_gpu():
+    print(torch.cuda.list_gpu_processes())
+    gc.collect()
+    torch.cuda.empty_cache()
+
+
 # check_tensor_mem(1024, 1024, batch=8)
