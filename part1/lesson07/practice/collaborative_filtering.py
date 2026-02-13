@@ -28,7 +28,16 @@ GPU MEMORY OPTIMIZATION GUIDE (MACHINE LEARNING)
        activations on the fly.
      - Mixed Precision (AMP): Performs math in FP16 while keeping a master copy in FP32.
 
-4. QUICK OOM (OUT OF MEMORY) CHECKLIST
+4. GRADIENT ACCUMULATION (The Memory "Cheat")
+   * Concept: Split a large "Global Batch" into smaller "Micro Batches."
+   * How it works:
+     - Run several forward/backward passes without updating weights.
+     - Gradients are summed up (accumulated) in VRAM.
+     - `optimizer.step()` is called only once every N steps.
+   * Benefit: Allows a "Batch Size 64" effect on a GPU that only fits "Batch Size 4."
+   * Trade-off: Training takes longer (sequential) but doesn't crash.
+
+5. QUICK OOM (OUT OF MEMORY) CHECKLIST
    [ ] Try Batch Size = 1 (to see if it's an activation/data issue).
    [ ] Enable 4-bit/8-bit Loading (to see if it's a weight issue).
    [ ] Use Gradient Accumulation (to simulate large batches with small VRAM).
